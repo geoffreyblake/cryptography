@@ -1,6 +1,10 @@
 sudo: true
 dist: focal
-
+# dist: bionic
+arch:
+  - arm64-graviton2
+virt: vm
+group: edge # required for now, but will eventually go away
 language: python
 
 cache:
@@ -13,10 +17,23 @@ cache:
 branches:
     only:
         - master
+        - graviton2_travisci_poc
         - /\d+\.\d+\.x/
         - /\d+\.\d+(\.\d+)?/
 
 matrix:
+    exclude:
+        # No python2.7 binary for ubuntu-focal on Travis
+        - python: 2.7
+          arch: arm64-graviton2
+        - python: pypy2.7-7.3.1
+          arch: arm64-graviton2
+        - python: pypy3.6-7.3.1
+          arch: arm64-graviton2
+        - arch: arm64-graviton2
+          services: docker
+        - arch: arm64-graviton2
+          dist: xenial
     include:
         - python: 3.8
           env: TOXENV=pep8,packaging
@@ -54,6 +71,7 @@ matrix:
         - python: 3.8
           env: TOXENV=py38 LIBRESSL=3.2.0
 
+        # Don't necessarily need python in the VM? The docker container is going to use its own env corret?  
         - python: 2.7
           services: docker
           env: TOXENV=py27 DOCKER=pyca/cryptography-runner-centos7
@@ -102,7 +120,7 @@ matrix:
         - python: 3.8
           services: docker
           env: TOXENV=py38 DOCKER=pyca/cryptography-runner-alpine:latest
-
+        
         - python: 3.8
           env: TOXENV=docs OPENSSL=1.1.1g
           addons:
@@ -135,7 +153,7 @@ matrix:
         - python: 3.8
           env: DOWNSTREAM=urllib3
           # Tests hang when run under bionic/focal
-          dist: xenial
+          dist: xenial   
 
 install:
     - ./.travis/install.sh
